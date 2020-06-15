@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+      "target": "es5",
+      "module": "es6",
+      "watch": true,
+      "sourceMap": true
+    },
+    "include": ["src/**/*", "app.js", "app.ts"],
+    "types": ["hammerjs"]
+}

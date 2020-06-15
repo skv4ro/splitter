@@ -1,0 +1,20 @@
+.splitter-mover {
+    width: 50px;
+    height: 50px;
+    border-radius: 25px;
+    background-color: black;
+    transition: transform .25s;
+    opacity: .5;
+}
+/*.splitter-pane {
+    border: 5px solid black;
+}*/
+html {
+    touch-action: none;
+}
+#splitter-pane-2 {
+    margin-top: -10px;
+}
+#splitter-pane-3 {
+    margin-top: 10px;
+}
