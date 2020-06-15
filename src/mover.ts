@@ -12,6 +12,7 @@ export class Mover extends AbstractElement {
     private scaleFactor: number = .2;
     private boundMouseMoveHandle: EventListener;
     private pointerID: number;
+    parent: HTMLElement;
 
     private leftMateInit: number;
 
@@ -27,6 +28,10 @@ export class Mover extends AbstractElement {
 
         const hammertime = new Hammer(this.element);
         hammertime.on("doubletap", () => this.dblClickHandler());
+    }
+    
+    setParent(parent: HTMLElement): void {
+        this.parent = parent;
     }
 
     getHeight(): number {
@@ -67,12 +72,15 @@ export class Mover extends AbstractElement {
         const scale = 1 - this.scaleFactor;
         this.element.style.transform = 'scale(' + scale + ',' + scale +')';
         this.initX = Math.round(event.clientX);
+        //console.log(event.clientX);
         this.initY = event.clientY;
         this.initLeft = this.getLeft();
         this.initTop = this.getTop();
         document.addEventListener('pointermove', this.boundMouseMoveHandle = this.eventMoveHandler.bind(this));
         //this.leftMateInit = this.leftMate.getLeft() + this.leftMate.getWidth();
         this.leftMate.initPosition();
+        this.leftMate.isMoving = true;
+        //this.rightMate.initPosition();
     }
 
     private dblClickHandler(): void {
@@ -106,7 +114,9 @@ export class Mover extends AbstractElement {
             //let offset = this.leftMateInit + difX;
             //this.leftMate.element.innerHTML = this.leftMateInit + "\n" + this.leftMate.getInitRight();
 
-            this.leftMate.move(difX);
+            //this.leftMate.move(difX);
+            this.leftMate.moveTest(Math.round(event.clientX) - this.parent.getBoundingClientRect().left + (this.leftMate.getInitRight() + this.parent.getBoundingClientRect().left - this.initX));
+            //this.rightMate.moveTest(Math.round(event.clientX) - this.parent.getBoundingClientRect().left + (this.rightMate.getInitLeft() + this.parent.getBoundingClientRect().left - this.initX));
             //this.leftMate.setWidth(offset - this.leftMate.getLeft());
             //this.rightMate.setWidth(this.rightMate.getLeft() + this.rightMate.getWidth() - offset);
             //this.rightMate.setLeft(offset);
@@ -118,6 +128,7 @@ export class Mover extends AbstractElement {
         if(event.pointerId === this.pointerID) {
             document.removeEventListener('pointermove', this.boundMouseMoveHandle);
             this.element.style.transform = 'scale(1, 1)';
+            this.leftMate.isMoving = false;
         }
     }
 }

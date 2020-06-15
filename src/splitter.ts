@@ -55,6 +55,7 @@ export class Splitter {
             mover.element.id = 'splitter-mover-' + i.toString() + '-' + (i + 1).toString();
             this.movers.push(mover);
             this.parent.appendChild(mover.element);
+            mover.setParent(this.parent);
         }
 
         this.initStyle();
