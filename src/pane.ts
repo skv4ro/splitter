@@ -4,24 +4,41 @@ export default class Pane extends AbstractElement {
     minWidth: number = 50;
     private initLeft: number;
     private initWidth: number;
-    private initRight: number;
-    leftPane: Pane;
-    rightPane: Pane; 
+    private initRight: number; 
+    readonly attachedItems: Pane[] = []; //items attached to right side of a pane
+    readonly moveCallbacks: Function[] = [];
+    leftPane: Pane; //relative left mate pane
+    rightPane: Pane; //relative right mate pane
     isMoving: boolean; //true if pane is being moving by mover
-    attachedItems: Pane[] = []; //items attached to right side of a pane
 
     constructor() {
         super();
         this.setZIndex(0);
-        this.element.style.height = '100%';
+        //this.element.style.height = '100%';
         this.element.style.left = '0';
         this.element.setAttribute('class', 'splitter-pane');
     }
 
+    /**
+     * Runs move callbacks
+     */
+    runMoveCallbacks(): void {
+        this.moveCallbacks.forEach(callback => {
+            callback();
+        })
+    }
+
+    /**
+     * Attach item to this pane right's side
+     * @param item New attached item
+     */
     attachItem(item: Pane): void {
         this.attachedItems.push(item);
     }
 
+    /**
+     * Adapt right pane positions
+     */
     adaptRight(): void {
         if(this.rightPane == undefined) return;
         let offset = this.leftPane.getRight();
@@ -35,8 +52,11 @@ export default class Pane extends AbstractElement {
         } 
     }
 
+    /**
+     * Adapt left pane positions
+     */
     adaptLeft(): void {
-        if(this.rightPane == undefined) return;
+        if(this.leftPane == undefined) return;
         let offset = this.leftPane.getRight();
         let width = this.rightPane.getLeft() - this.getLeft();
         if(width <= this.minWidth) {
@@ -44,33 +64,25 @@ export default class Pane extends AbstractElement {
             this.setWidth(this.minWidth);
             this.leftPane.adaptLeft();
         } else {
+            
             this.setWidth(width);
             this.setLeft(offset);
         } 
     }
 
-    private adapt(isLeft: boolean): void {
-        let mate: Pane = isLeft ? this.leftPane : this.rightPane;
-        if(mate == undefined) return;
-        let offset = this.leftPane.getRight();
-        this.setLeft(offset);
-        let width = this.rightPane.getLeft() - this.getLeft();
-        if(width <= this.minWidth) {
-            this.setLeft(this.rightPane.getLeft() - this.minWidth);
-            this.setWidth(this.minWidth);
-            mate.adapt(isLeft);
-        } else {
-            this.setWidth(width);
-            this.setLeft(offset);
-        } 
-    }
-
-    private adaptAttachedItems(offset: number): void {
+    /**
+     * Sets left position of attached element to the pane considering item leftOffset
+     * @param position Left position of attached element
+     */
+    private adaptAttachedItems(position: number): void {
         this.attachedItems.forEach(item => {
-            item.setLeft(offset + item.offsetLeft);
+            item.setLeft(position + item.offsetLeft);
         });
     }
 
+    /**
+     * Calculates maximal with of the pane
+     */
     private getMaxWidth() {
         let topRightPane: Pane = this.rightPane;
         let sumMinWidths: number = 0;
@@ -83,6 +95,10 @@ export default class Pane extends AbstractElement {
         return topRightPane.getLeft() - this.getLeft() - sumMinWidths;
     }
 
+
+    /**
+     * Caluculates maximal left position of the pane
+     */
     private getMinLeft() {
         let topLeftPane: Pane = this.leftPane;
         let sumMinLeft: number = 0;
@@ -95,14 +111,22 @@ export default class Pane extends AbstractElement {
         return sumMinLeft;
     }
 
+    /**
+     * Sets left position of the pane and also attached items
+     * @param left Absolute left position
+     */
     setLeft(left: number): void {
         super.setLeft(left);
         this.adaptAttachedItems(left);
     }
 
+    /**
+     * Moves right side of the pane to the specific position
+     * @param position Right position of the pane
+     */
     move(position: number): void {
+        this.runMoveCallbacks();
         let width: number = position - this.getLeft();
-        this.element.innerHTML = this.getMaxWidth() + "";
         if(width <= this.minWidth) {
             this.setWidth(this.minWidth);
             let left: number = position - this.minWidth;
@@ -116,25 +140,42 @@ export default class Pane extends AbstractElement {
         this.rightPane.adaptRight();      
     }
 
+    /**
+     * Moves the pane by increment value
+     * @param increment Increment to move the pane by
+     */
     moveBy(increment: number): void {
         let initalPosition: number = this.getRight();
         this.move(initalPosition + increment);
     }
 
+    /**
+     * Sets initial positions of the pane before its moving
+     */
     initPosition(): void {
         this.initLeft = this.getLeft();
         this.initWidth = this.getWidth();
         this.initRight = this.rightPane.getLeft();
     }
 
+    /**
+     * Return initial left position
+     */
     getInitLeft(): number {
         return this.initLeft;
     }
 
+    /**
+     * Return initial width
+     */
     getInitWidth(): number {
         return this.initWidth;
     }
 
+
+    /**
+     * Return initial right position
+     */
     getInitRight(): number {
         return this.initRight;
     }

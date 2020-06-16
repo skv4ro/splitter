@@ -7,14 +7,12 @@ export default class Mover extends AbstractElement {
     readonly rightMate: Pane;
     private initX: number = 0;
     private initY: number = 0;
-    private initLeft: number = 0;
     private initTop: number = 0;
     private scaleFactor: number = .2;
     private boundMouseMoveHandle: EventListener;
     private pointerID: number;
     parent: HTMLElement;
 
-    private leftMateInit: number;
 
     constructor(leftMate: Pane, rightMate: Pane) {
         super();
@@ -26,7 +24,7 @@ export default class Mover extends AbstractElement {
         document.addEventListener('pointerup', event => this.eventEndHandler(event));
 
         const hammertime = new Hammer(this.element);
-        hammertime.on("doubletap", () => this.dblClickHandler());
+        hammertime.on("doubletap", () => this.swapPanes());
 
         this.offsetLeft = -25;
     }
@@ -74,14 +72,13 @@ export default class Mover extends AbstractElement {
         this.element.style.transform = 'scale(' + scale + ',' + scale +')';
         this.initX = Math.round(event.clientX);
         this.initY = event.clientY;
-        this.initLeft = this.getLeft();
         this.initTop = this.getTop();
         document.addEventListener('pointermove', this.boundMouseMoveHandle = this.eventMoveHandler.bind(this));
         this.leftMate.initPosition();
         this.leftMate.isMoving = true;
     }
 
-    private dblClickHandler(): void {
+    private swapPanes(): void {
         let leftWidth = this.leftMate.getWidth();
         let leftLeft = this.leftMate.getLeft();
         let rightWidth = this.rightMate.getWidth();

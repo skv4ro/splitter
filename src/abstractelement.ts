@@ -2,10 +2,10 @@ export default class AbstractElement {
     private zIndex: number;
     element: HTMLElement;
     offsetLeft: number = 0;
-    offsetRight: number = 0;
 
     constructor() {
-        this.element = AbstractElement.createPaneElement();
+        this.element = document.createElement('div');
+        this.element.style.position = 'absolute';
     }
 
     getLeft(): number {
@@ -31,11 +31,5 @@ export default class AbstractElement {
     setZIndex(zIndex: number) {
         this.zIndex = zIndex;
         this.element.style.zIndex = this.zIndex.toString();
-    }
-
-    private static createPaneElement(): HTMLElement {
-        const element: HTMLElement = document.createElement('div');
-        element.style.position = 'absolute';
-        return element;
     }
 }

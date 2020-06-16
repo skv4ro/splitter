@@ -1,29 +1,22 @@
 import Pane from "./pane";
-import DummyPane from "./dummypane";
 import Mover from "./mover";
-import DefaultConfig from "./defaultconfig";
 import * as _ from "lodash";
+import {defConfig} from "./config";
 
 export class Splitter {
     readonly panes: Pane[] = [];
     readonly movers: Mover[] = [];
     private readonly parent: HTMLElement;
+    private readonly config;
 
-    constructor(parent: HTMLElement, numOfPanes: number) {
+    constructor(parent: HTMLElement, config: any) {
         this.parent = parent;
-        this.build(numOfPanes);
-        //addEventListener('resize', this.updateStyle.bind(this));
-        //document.addEventListener("pointerdown", () => this.initPanePositions());
+        this.config = _.merge(defConfig, config);
+        this.build();
     }
 
-    private initPanePositions(): void {
-        for(let i = 1; i < this.panes.length - 1; i++) {
-            let pane: Pane = this.panes[i];
-            pane.initPosition();
-        }
-    }
-
-    private build(numOfPanes: number): void {
+    private build(): void {
+        let numOfPanes = this.config.numOfPanes;
         let leftDummyPane = new Pane();
         leftDummyPane.element.id = "dummy-pane-0";
         this.panes.push(leftDummyPane);
@@ -72,6 +65,7 @@ export class Splitter {
         for(i; i < len; i++) {
             let pane = this.panes[i];
             let leftPane = this.panes[i - 1];
+            pane.element.style.height = this.config.paneHeight;
 
             if(i == 0) {
                 pane.setLeft(0);
