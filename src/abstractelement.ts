@@ -1,6 +1,8 @@
-export class AbstractElement {
+export default class AbstractElement {
     private zIndex: number;
     element: HTMLElement;
+    offsetLeft: number = 0;
+    offsetRight: number = 0;
 
     constructor() {
         this.element = AbstractElement.createPaneElement();

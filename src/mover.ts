@@ -1,8 +1,8 @@
-import {AbstractElement} from "./abstractelement";
-import {Pane} from "./pane";
+import AbstractElement from "./abstractelement";
+import Pane from "./pane";
 import * as Hammer from "hammerjs";
 
-export class Mover extends AbstractElement {
+export default class Mover extends AbstractElement {
     readonly leftMate: Pane;
     readonly rightMate: Pane;
     private initX: number = 0;
@@ -22,12 +22,13 @@ export class Mover extends AbstractElement {
         this.rightMate = rightMate;
         this.element.setAttribute('class', 'splitter-mover');
 
-        //this.element.addEventListener('dblclick', () => this.dblClickHandler());
         this.element.addEventListener('pointerdown', event => this.eventStartHandler(event));
         document.addEventListener('pointerup', event => this.eventEndHandler(event));
 
         const hammertime = new Hammer(this.element);
         hammertime.on("doubletap", () => this.dblClickHandler());
+
+        this.offsetLeft = -25;
     }
     
     setParent(parent: HTMLElement): void {
@@ -72,15 +73,12 @@ export class Mover extends AbstractElement {
         const scale = 1 - this.scaleFactor;
         this.element.style.transform = 'scale(' + scale + ',' + scale +')';
         this.initX = Math.round(event.clientX);
-        //console.log(event.clientX);
         this.initY = event.clientY;
         this.initLeft = this.getLeft();
         this.initTop = this.getTop();
         document.addEventListener('pointermove', this.boundMouseMoveHandle = this.eventMoveHandler.bind(this));
-        //this.leftMateInit = this.leftMate.getLeft() + this.leftMate.getWidth();
         this.leftMate.initPosition();
         this.leftMate.isMoving = true;
-        //this.rightMate.initPosition();
     }
 
     private dblClickHandler(): void {
@@ -109,18 +107,8 @@ export class Mover extends AbstractElement {
             const difY: number = event.clientY - this.initY;
 
             this.setTop(this.initTop + difY);
-            this.setLeft(this.initLeft + difX);
-            //const moverOffset = this.getLeft() + this.getWidth() / 2;
-            //let offset = this.leftMateInit + difX;
-            //this.leftMate.element.innerHTML = this.leftMateInit + "\n" + this.leftMate.getInitRight();
 
-            //this.leftMate.move(difX);
-            this.leftMate.moveTest(Math.round(event.clientX) - this.parent.getBoundingClientRect().left + (this.leftMate.getInitRight() + this.parent.getBoundingClientRect().left - this.initX));
-            //this.rightMate.moveTest(Math.round(event.clientX) - this.parent.getBoundingClientRect().left + (this.rightMate.getInitLeft() + this.parent.getBoundingClientRect().left - this.initX));
-            //this.leftMate.setWidth(offset - this.leftMate.getLeft());
-            //this.rightMate.setWidth(this.rightMate.getLeft() + this.rightMate.getWidth() - offset);
-            //this.rightMate.setLeft(offset);
-            //this.rightMate.adapt(offset);
+            this.leftMate.move(Math.round(event.clientX) - this.parent.getBoundingClientRect().left + (this.leftMate.getInitRight() + this.parent.getBoundingClientRect().left - this.initX));
         }
     }
 

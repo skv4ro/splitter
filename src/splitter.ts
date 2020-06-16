@@ -1,6 +1,7 @@
-import {Pane} from "./pane";
-import {Mover} from "./mover";
-import {Config} from "./config";
+import Pane from "./pane";
+import DummyPane from "./dummypane";
+import Mover from "./mover";
+import DefaultConfig from "./defaultconfig";
 import * as _ from "lodash";
 
 export class Splitter {

@@ -1,4 +1,5 @@
 import { Splitter } from "./src/splitter";
+import { Mover } from "./src/mover";
 
 var element = document.querySelector("#app");
 
@@ -12,11 +13,13 @@ splitter.panes[2].element.style.backgroundColor = "#675";
 splitter.panes[3].element.style.backgroundColor = "#756";
 if(splitter.panes[4] != undefined) splitter.panes[4].element.style.backgroundColor = "#576";
 
-splitter.panes[0].element.style.height = "100%";
-splitter.panes[1].element.style.height = "75%";
-splitter.panes[2].element.style.height = "50%";
-
 window.test = function test() {
-    splitter.panes[2].initPosition();
-    splitter.panes[2].move(-5);
+    splitter.panes[2].moveBy(50);
 }
+
+splitter.panes[2].attachItem(splitter.movers[0]);
+splitter.panes[3].attachItem(splitter.movers[1]);
+splitter.panes[4].attachItem(splitter.movers[2]);
+
+let mover = new Mover(splitter.panes[1], splitter.panes[2]);
+splitter.panes[2].attachItem(mover);
