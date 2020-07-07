@@ -122,7 +122,7 @@ export default class Mover extends PseudoElement {
         if(event.pointerId === this.pointerID) {
             document.removeEventListener('pointermove', this.boundMouseMoveHandle);
             this.element.style.transform = 'scale(1, 1)';
-            if(this.rightMate.element.id != 'splitter-pane-2') this.rightMate.setIsMoving(false);
+            /*if(this.rightMate.element.id != 'splitter-pane-2')*/ this.rightMate.setIsMoving(false);
         }
     }
 }

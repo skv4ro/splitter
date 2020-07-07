@@ -224,19 +224,41 @@ export default class Pane extends PseudoElement {
     }
 
     canMoveTest(direction: boolean, position: number): number {
-        if(!direction) {
-            if(this.leftPane.precomputeWidth(direction, position) <= this.leftPane.minWidth) {
-                if(this.leftPane.isMoving) return this.leftPane.leftAnchor() + this.leftPane.minWidth;
-            }
-        } else {
-            if(this.precomputeWidth(direction ,position) <= this.minWidth) {
-                if(this.rightPane.isMoving) return this.rightAnchor() - this.minWidth;
+        let pane: Pane = direction ? this : this.leftPane;
+        if(pane.computeWidth(direction, position) <= pane.minWidth) {
+            if(direction) {
+                if(pane.rightPane.isMoving) return pane.rightAnchor() - pane.minWidth;
+                let sum: number = pane.minWidth;
+                while((pane = pane.rightPane) != undefined) {
+                    if(pane.isMoving) return pane.leftAnchor() - sum;
+                    if(pane.computeWidth(direction, position + sum) > pane.minWidth) return position;
+                    sum += pane.minWidth;
+                }
+            } else {
+                if(pane.isMoving) return pane.leftAnchor() + pane.minWidth;
+                let sum: number = pane.minWidth;
+                while((pane = pane.leftPane) != undefined) {
+                    if(pane.isMoving && pane.computeWidth(direction, position - sum) <= pane.minWidth) return pane.leftAnchor() + sum + pane.minWidth;
+                    if(pane.computeWidth(direction, position - sum) > pane.minWidth) return position;
+                    sum += pane.minWidth;
+                }
             }
         }
         return position;
+
+        /*if(!direction) {
+            if(this.leftPane.computeWidth(direction, position) <= this.leftPane.minWidth) {
+                if(this.leftPane.isMoving) return this.leftPane.leftAnchor() + this.leftPane.minWidth;
+            }
+        } else {
+            if(this.computeWidth(direction ,position) <= this.minWidth) {
+                if(this.rightPane.isMoving) return this.rightAnchor() - this.minWidth;
+            }
+        }
+        return position;*/
     }
 
-    precomputeWidth(direction: boolean, position: number): number {
+    computeWidth(direction: boolean, position: number): number {
         if(direction) return this.rightAnchor() - position;
         else return position - this.leftAnchor();
     }
@@ -258,6 +280,22 @@ export default class Pane extends PseudoElement {
         } else {
             if(this.leftPane.getWidth() <= this.leftPane.minWidth) {
                 this.leftPane.moveLeft(position - this.leftPane.getWidth());
+            }
+        }
+    }
+
+    moveMate(direction: number, position: number): void {
+        this.setLeft(position);
+        this.adapt();
+        if(this.getWidth() <= this.minWidth) {
+            let pane: Pane = direction ? this.rightPane : this.leftPane;
+            if(pane != undefined) {
+                if(direction) {
+                    pane.moveMate(direction, position + this.getWidth());
+                } else {
+                    pane.adapt();
+                    pane.moveMate(direction, position - pane.getWidth());
+                }
             }
         }
     }
