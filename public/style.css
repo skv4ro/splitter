@@ -13,3 +13,12 @@
 html {
     touch-action: none;
 }
+#splitter-pane-1 {
+    margin-top: 20px;
+}
+#splitter-pane-2 {
+    margin-top: -10px;
+}
+#splitter-pane-3 {
+    margin-top: -20px;
+}

@@ -1,6 +1,8 @@
-import AbstractElement from "./abstractelement";
+import PseudoElement from "./pseudoelement";
+import { min, isInteger, random } from "lodash";
 
-export default class Pane extends AbstractElement {    
+
+export default class Pane extends PseudoElement {    
     minWidth: number = 50;
     private initLeft: number;
     private initWidth: number;
@@ -10,6 +12,18 @@ export default class Pane extends AbstractElement {
     leftPane: Pane; //relative left mate pane
     rightPane: Pane; //relative right mate pane
     isMoving: boolean; //true if pane is being moving by mover
+    leftAnchor: Function = function(): number {
+        if(this.leftPane == undefined) return;
+        return this.leftPane.getRight();
+    }.bind(this);
+    rightAnchor: Function = function(): number {
+        if(this.rightPane == undefined) return;
+        return this.rightPane.getLeft();
+    }.bind(this);
+    leftItems: Pane[] = [];
+    actualMinWidth: number = this.minWidth;
+    maxLeft: number;
+    minLeft: number;
 
     constructor() {
         super();
@@ -57,16 +71,15 @@ export default class Pane extends AbstractElement {
      */
     adaptLeft(): void {
         if(this.leftPane == undefined) return;
-        let offset = this.leftPane.getRight();
-        let width = this.rightPane.getLeft() - this.getLeft();
+        let offset: number = this.leftPane.getRight();
+        let width: number = this.rightPane.getLeft() - this.getLeft();
         if(width <= this.minWidth) {
             this.setLeft(this.rightPane.getLeft() - this.minWidth);
             this.setWidth(this.minWidth);
             this.leftPane.adaptLeft();
         } else {
-            
-            this.setWidth(width);
             this.setLeft(offset);
+            this.setWidth(width);
         } 
     }
 
@@ -81,63 +94,193 @@ export default class Pane extends AbstractElement {
     }
 
     /**
-     * Calculates maximal with of the pane
-     */
-    private getMaxWidth() {
-        let topRightPane: Pane = this.rightPane;
-        let sumMinWidths: number = 0;
-        while(topRightPane.rightPane != undefined) {
-            let assignedValue: number;
-            assignedValue = topRightPane.isMoving ? topRightPane.rightPane.getWidth() : topRightPane.minWidth;
-            sumMinWidths += assignedValue;
-            topRightPane = topRightPane.rightPane;
-        }
-        return topRightPane.getLeft() - this.getLeft() - sumMinWidths;
-    }
-
-
-    /**
      * Caluculates maximal left position of the pane
      */
     private getMinLeft() {
         let topLeftPane: Pane = this.leftPane;
         let sumMinLeft: number = 0;
-        while(topLeftPane.leftPane != undefined) {
+        while(topLeftPane != undefined) {
             let assignedValue: number;
-            assignedValue = topLeftPane.isMoving ? topLeftPane.getWidth() : topLeftPane.minWidth;
+            //assignedValue = topLeftPane.isMoving ? topLeftPane.getWidth() : topLeftPane.minWidth;
+            assignedValue = topLeftPane.minWidth;
             sumMinLeft += assignedValue;
             topLeftPane = topLeftPane.leftPane;
         }
         return sumMinLeft;
     }
 
-    /**
-     * Sets left position of the pane and also attached items
-     * @param left Absolute left position
-     */
-    setLeft(left: number): void {
-        super.setLeft(left);
-        this.adaptAttachedItems(left);
+    getMaxLeft(): number {
+        let topRightPane: Pane = this;
+        let sumMaxLeft: number = 0;//topRightPane.minWidth;
+        while(topRightPane.rightPane != undefined) {
+            let assignedValue: number;
+            //assignedValue = topRightPane.isMoving ? topRightPane.getWidth() : topRightPane.minWidth;
+            assignedValue = topRightPane.minWidth;
+            sumMaxLeft += assignedValue;
+            topRightPane = topRightPane.rightPane;
+        }
+        return topRightPane.rightAnchor() - sumMaxLeft - topRightPane.minWidth;
+    }
+
+    computeMaxLeft(): void {
+        let topRightPane: Pane = this;
+        let sumMaxLeft: number = 0;//topRightPane.minWidth;
+        while(topRightPane.rightPane != undefined) {
+            let assignedValue: number;
+            assignedValue = topRightPane.minWidth;
+            sumMaxLeft += assignedValue;
+            topRightPane = topRightPane.rightPane;
+        }
+        this.maxLeft =  topRightPane.rightAnchor() - sumMaxLeft - topRightPane.minWidth;
+    }
+
+    computeMinLeft(): void {
+        let topLeftPane: Pane = this.leftPane;
+        let sumMinLeft: number = 0;
+        while(topLeftPane != undefined) {
+            let assignedValue: number;
+            //assignedValue = topLeftPane.isMoving ? topLeftPane.getWidth() : topLeftPane.minWidth;
+            assignedValue = topLeftPane.minWidth;
+            sumMinLeft += assignedValue;
+            topLeftPane = topLeftPane.leftPane;
+        }
+        this.minLeft = sumMinLeft;
+    }
+
+    updateLimits(): void {
+        this.computeMinLeft();
+        this.computeMaxLeft();
+    }
+
+    setWidth(width: number) {
+        if(width <= this.minWidth) {
+            width = this.minWidth;
+        }
+        super.setWidth(width);
+        //console.log(this.element.id + " " + this.rightAnchor());
+    }
+
+    adapt(): void {
+        this.setWidth(this.rightAnchor() - this.getLeft());
+    }
+
+    setIsMoving(isMoving: boolean): void {
+        this.isMoving = isMoving;
+    }
+
+    getIsMoving(): boolean {
+        return this.isMoving;
+    }
+
+    getActualMinWdith(): number {
+        return this.actualMinWidth;
+    }
+
+    setAcualMinWidth(): void {
+        if(this.isMoving) this.actualMinWidth = this.getWidth();
+        else this.actualMinWidth = this.minWidth;
     }
 
     /**
      * Moves right side of the pane to the specific position
      * @param position Right position of the pane
      */
-    move(position: number): void {
-        this.runMoveCallbacks();
-        let width: number = position - this.getLeft();
-        if(width <= this.minWidth) {
-            this.setWidth(this.minWidth);
-            let left: number = position - this.minWidth;
-            if(left <= this.getMinLeft()) this.setLeft(this.getMinLeft());
-            else this.setLeft(left);
-            this.leftPane.adaptLeft();
-        } else {
-            if(width >= this.getMaxWidth()) this.setWidth(this.getMaxWidth());
-            else this.setWidth(position - this.getLeft());
+
+
+    setLeft(left: number): void {
+        if(left >= this.maxLeft) {
+            left = this.maxLeft;
         }
-        this.rightPane.adaptRight();      
+        if(left <= this.minLeft) {
+            left = this.minLeft;
+        }
+        super.setLeft(left);
+        this.adaptAttachedItems(left);
+    }
+
+    canMove(direction: boolean): boolean {
+        if(direction) {
+            let topRightPane: Pane = this;
+            if(topRightPane.getWidth() <= topRightPane.minWidth) {
+                while((topRightPane = topRightPane.rightPane) != undefined) {
+                    if(topRightPane.isMoving) return false;
+                    if(topRightPane.getWidth() > topRightPane.minWidth) return true;
+                }
+                return false;
+            }
+            return true;
+        } else {
+            let topLeftPane: Pane = this.leftPane;
+            if(topLeftPane.getWidth() <= topLeftPane.minWidth) {
+                if(topLeftPane.isMoving) return false;
+                while((topLeftPane = topLeftPane.leftPane) != undefined) {
+                    if(topLeftPane.isMoving && topLeftPane.getWidth() <= topLeftPane.minWidth) return false;
+                    if(topLeftPane.getWidth() > topLeftPane.minWidth) return true;
+                }
+                return false;
+            }
+            return true;
+        }
+    }
+
+    canMoveTest(direction: boolean, position: number): number {
+        if(!direction) {
+            if(this.leftPane.precomputeWidth(direction, position) <= this.leftPane.minWidth) {
+                if(this.leftPane.isMoving) return this.leftPane.leftAnchor() + this.leftPane.minWidth;
+            }
+        } else {
+            if(this.precomputeWidth(direction ,position) <= this.minWidth) {
+                if(this.rightPane.isMoving) return this.rightAnchor() - this.minWidth;
+            }
+        }
+        return position;
+    }
+
+    precomputeWidth(direction: boolean, position: number): number {
+        if(direction) return this.rightAnchor() - position;
+        else return position - this.leftAnchor();
+    }
+
+    move(position: number): void {
+        let direction: boolean = position > this.getLeft() ? true : false;
+        //if(!this.canMove(direction)) return;
+        position = this.canMoveTest(direction, position);
+
+        this.setLeft(position);
+        this.adapt();
+        this.leftPane.adapt();
+        if(direction) {
+            if(this.getWidth() <= this.minWidth) {
+                if(this.rightPane != undefined) {
+                    this.rightPane.moveRight(position + this.getWidth());    
+                }
+            }
+        } else {
+            if(this.leftPane.getWidth() <= this.leftPane.minWidth) {
+                this.leftPane.moveLeft(position - this.leftPane.getWidth());
+            }
+        }
+    }
+
+    moveRight(position: number) {
+        this.setLeft(position);
+        this.adapt();
+        if(this.getWidth() <= this.minWidth) {
+            if(this.rightPane != undefined) {
+                this.rightPane.moveRight(position + this.getWidth());
+            }
+        }
+    }
+
+    moveLeft(position: number): void {
+        this.setLeft(position);
+        this.adapt();
+        if(this.getWidth() <= this.minWidth) {
+            if(this.leftPane != undefined) {
+                this.leftPane.adapt();
+                this.leftPane.moveLeft(position - this.leftPane.getWidth());
+            }
+        }
     }
 
     /**

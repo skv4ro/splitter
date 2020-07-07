@@ -1,8 +1,9 @@
-import AbstractElement from "./abstractelement";
+import PseudoElement from "./pseudoelement";
 import Pane from "./pane";
 import * as Hammer from "hammerjs";
+import { takeRightWhile } from "lodash";
 
-export default class Mover extends AbstractElement {
+export default class Mover extends PseudoElement {
     readonly leftMate: Pane;
     readonly rightMate: Pane;
     private initX: number = 0;
@@ -12,6 +13,8 @@ export default class Mover extends AbstractElement {
     private boundMouseMoveHandle: EventListener;
     private pointerID: number;
     parent: HTMLElement;
+    topLeftMate: Pane = this.leftMate;
+    topRightMate: Pane = this.rightMate;
 
 
     constructor(leftMate: Pane, rightMate: Pane) {
@@ -52,7 +55,7 @@ export default class Mover extends AbstractElement {
     }
 
     setLeft(left: number) {
-        const leftPane: Pane = this.leftMate;
+        /*const leftPane: Pane = this.leftMate;
         const rightPane: Pane = this.rightMate;
         const halfWidth: number = this.getWidth() / 2;
         const leftLimit: number = leftPane.getLeft() + leftPane.minWidth - halfWidth;
@@ -61,7 +64,7 @@ export default class Mover extends AbstractElement {
             left = leftLimit;
         } else if(left > rightLimit) {
             left = rightLimit;
-        }
+        }*/
         super.setLeft(left);
     }
 
@@ -75,7 +78,7 @@ export default class Mover extends AbstractElement {
         this.initTop = this.getTop();
         document.addEventListener('pointermove', this.boundMouseMoveHandle = this.eventMoveHandler.bind(this));
         this.leftMate.initPosition();
-        this.leftMate.isMoving = true;
+        this.rightMate.setIsMoving(true);
     }
 
     private swapPanes(): void {
@@ -105,7 +108,13 @@ export default class Mover extends AbstractElement {
 
             this.setTop(this.initTop + difY);
 
-            this.leftMate.move(Math.round(event.clientX) - this.parent.getBoundingClientRect().left + (this.leftMate.getInitRight() + this.parent.getBoundingClientRect().left - this.initX));
+            let parentOffset: number = this.parent.getBoundingClientRect().left;
+            let dif: number = this.leftMate.getInitRight() + this.parent.getBoundingClientRect().left - this.initX;
+            let position: number = Math.round(event.clientX) - parentOffset + dif;
+            //this.leftMate.move(Math.round(event.clientX) - this.parent.getBoundingClientRect().left + (this.leftMate.getInitRight() + this.parent.getBoundingClientRect().left - this.initX));
+            this.rightMate.move(position);
+            //this.rightMate.adapt();
+            //this.leftMate.adapt();
         }
     }
 
@@ -113,7 +122,7 @@ export default class Mover extends AbstractElement {
         if(event.pointerId === this.pointerID) {
             document.removeEventListener('pointermove', this.boundMouseMoveHandle);
             this.element.style.transform = 'scale(1, 1)';
-            this.leftMate.isMoving = false;
+            if(this.rightMate.element.id != 'splitter-pane-2') this.rightMate.setIsMoving(false);
         }
     }
 }

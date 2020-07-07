@@ -1,5 +1,7 @@
-export default class AbstractElement {
+export default abstract class PseudoElement {
     private zIndex: number;
+    private left: number;
+    private width: number;
     element: HTMLElement;
     offsetLeft: number = 0;
 
@@ -9,10 +11,12 @@ export default class AbstractElement {
     }
 
     getLeft(): number {
-        return parseInt(this.element.style.left);
+        //return parseInt(this.element.style.left);
+        return this.left;
     }
 
     setLeft(left: number) {
+        this.left = left;
         this.element.style.left = left + 'px';
     }
 
@@ -21,10 +25,12 @@ export default class AbstractElement {
     }
 
     getWidth(): number {
-        return this.element.offsetWidth;
+        //return this.element.offsetWidth;
+        return this.width;
     }
 
     setWidth(width: number) {
+        this.width = width;
         this.element.style.width = width + 'px';
     }
 

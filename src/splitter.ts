@@ -1,6 +1,6 @@
-import Pane from "./pane";
 import Mover from "./mover";
 import * as _ from "lodash";
+import Pane from "./pane";
 import {defConfig} from "./config";
 
 export class Splitter {
@@ -17,10 +17,6 @@ export class Splitter {
 
     private build(): void {
         let numOfPanes = this.config.numOfPanes;
-        let leftDummyPane = new Pane();
-        leftDummyPane.element.id = "dummy-pane-0";
-        this.panes.push(leftDummyPane);
-        this.parent.appendChild(leftDummyPane.element);
 
         let i: number;
         for(i = 0; i < numOfPanes; i++) {
@@ -30,21 +26,34 @@ export class Splitter {
             this.parent.appendChild(pane.element);
         }
 
-        let rightDummyPane = new Pane();
-        rightDummyPane.element.id = "dummy-pane-" + (numOfPanes + 1);
-        this.panes.push(rightDummyPane);
-        this.parent.appendChild(rightDummyPane.element);
-
-        for(i = 1; i < numOfPanes + 1; i++) {
+        for(i = 0; i < numOfPanes; i++) {
             let pane: Pane = this.panes[i]; 
             pane.leftPane = this.panes[i - 1];
             pane.rightPane = this.panes[i + 1];
         }
 
-        this.panes[0].rightPane = this.panes[1];
-        this.panes[this.panes.length - 1].leftPane = this.panes[this.panes.length - 2];
+        this.panes[1].leftItems.push(this.panes[0]);
+        this.panes[2].leftItems.push(this.panes[1]);
+        this.panes[3].leftItems.push(this.panes[2]);
 
-        for(i = 1; i < numOfPanes; i++) {
+        /*this.panes[0].minLeft = 0;
+        this.panes[1].minLeft = this.panes[0].minWidth;
+        this.panes[2].minLeft = this.panes[0].minWidth + this.panes[1].minWidth;
+        this.panes[3].minLeft = this.panes[0].minWidth + this.panes[1].minWidth + this.panes[2].minWidth;
+        this.panes[0].maxLeft = this.parent.clientWidth - this.panes[3].minWidth - this.panes[2].minWidth - this.panes[1].minWidth - this.panes[0].minWidth;
+        this.panes[1].maxLeft = this.parent.clientWidth - this.panes[3].minWidth - this.panes[2].minWidth - this.panes[1].minWidth;
+        this.panes[2].maxLeft = this.parent.clientWidth - this.panes[3].minWidth - this.panes[2].minWidth;
+        this.panes[3].maxLeft = this.parent.clientWidth - this.panes[3].minWidth;*/
+
+
+        this.panes[0].leftAnchor = function(): number {
+            return 0;
+        }
+        this.panes[this.panes.length - 1].rightAnchor = function(): number {
+            return this.parent.clientWidth;
+        }.bind(this);
+
+        for(i = 0; i < numOfPanes - 1; i++) {
             const mover: Mover = new Mover(this.panes[i], this.panes[i + 1]);
             mover.element.id = 'splitter-mover-' + i.toString() + '-' + (i + 1).toString();
             this.movers.push(mover);
@@ -67,7 +76,7 @@ export class Splitter {
             let leftPane = this.panes[i - 1];
             pane.element.style.height = this.config.paneHeight;
 
-            if(i == 0) {
+            /*if(i == 0) {
                 pane.setLeft(0);
                 pane.setWidth(0);
             } else if(i == len - 1) {
@@ -79,15 +88,18 @@ export class Splitter {
             } else {
                 pane.setLeft(leftPane.getLeft() + leftPane.getWidth());
                 pane.setWidth(xValue);
-            }
+            }*/
 
-            /*if(i === len - 1) {
+            if(i === len - 1) {
                 pane.setWidth(this.parent.offsetWidth - this.panes[i - 1].getLeft() - this.panes[i - 1].getWidth());
+                pane.setLeft(xOffset);
             } else if(i === 0) {
-
+                pane.setWidth(xValue);
+                pane.setLeft(0);
             } else {
                 pane.setWidth(xValue);
-            }*/
+                pane.setLeft(xOffset);                
+            }
             xOffset += xValue;
         }
 
