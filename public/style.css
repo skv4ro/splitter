@@ -13,12 +13,8 @@
 html {
     touch-action: none;
 }
-#splitter-pane-1 {
-    margin-top: 20px;
-}
-#splitter-pane-2 {
-    margin-top: -10px;
-}
-#splitter-pane-3 {
-    margin-top: -20px;
+#root {
+    margin: 10px;
+    height: calc(100% - 20px);
+    border: 1px solid white;
 }

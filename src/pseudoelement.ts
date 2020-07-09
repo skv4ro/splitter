@@ -3,7 +3,7 @@ export default abstract class PseudoElement {
     private left: number;
     private width: number;
     element: HTMLElement;
-    offsetLeft: number = 0;
+    //offsetLeft: number = 0;
 
     constructor() {
         this.element = document.createElement('div');

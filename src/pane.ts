@@ -1,27 +1,26 @@
 import PseudoElement from "./pseudoelement";
-import { min, isInteger, random } from "lodash";
-
+import AttachedItem from "./attacheditem";
 
 export default class Pane extends PseudoElement {    
     minWidth: number = 50;
     private initLeft: number;
     private initWidth: number;
     private initRight: number; 
-    readonly attachedItems: Pane[] = []; //items attached to right side of a pane
+    readonly attachedItems: AttachedItem[] = []; //items attached to left side of a pane
     readonly moveCallbacks: Function[] = [];
     leftPane: Pane; //relative left mate pane
     rightPane: Pane; //relative right mate pane
     isMoving: boolean; //true if pane is being moving by mover
     leftAnchor: Function = function(): number {
-        if(this.leftPane == undefined) return;
+        //if(this.leftPane == undefined) return;
         return this.leftPane.getRight();
     }.bind(this);
     rightAnchor: Function = function(): number {
-        if(this.rightPane == undefined) return;
+        //if(this.rightPane == undefined) return;
         return this.rightPane.getLeft();
     }.bind(this);
-    leftItems: Pane[] = [];
-    actualMinWidth: number = this.minWidth;
+    //leftItems: Pane[] = [];
+    //actualMinWidth: number = this.minWidth;
     maxLeft: number;
     minLeft: number;
 
@@ -42,11 +41,31 @@ export default class Pane extends PseudoElement {
         })
     }
 
+    swap(): void {
+        console.log(this);
+        let leftWidth = this.leftPane.getWidth();
+        let leftLeft = this.leftPane.getLeft();
+        let rightWidth = this.getWidth();
+        let rightLeft = this.getLeft();
+        let leftElement = this.leftPane.element;
+        let rightElement = this.element;
+        let temp: HTMLElement;
+
+        temp = leftElement;
+        this.leftPane.element = rightElement;
+        this.element = temp;
+
+        this.leftPane.setWidth(leftWidth);
+        this.leftPane.setLeft(leftLeft);
+        this.setWidth(rightWidth);
+        this.setLeft(rightLeft);
+    }
+
     /**
      * Attach item to this pane right's side
      * @param item New attached item
      */
-    attachItem(item: Pane): void {
+    attachItem(item: AttachedItem): void {
         this.attachedItems.push(item);
     }
 
@@ -89,37 +108,8 @@ export default class Pane extends PseudoElement {
      */
     private adaptAttachedItems(position: number): void {
         this.attachedItems.forEach(item => {
-            item.setLeft(position + item.offsetLeft);
+            item.setLeft(position + item.offset);
         });
-    }
-
-    /**
-     * Caluculates maximal left position of the pane
-     */
-    private getMinLeft() {
-        let topLeftPane: Pane = this.leftPane;
-        let sumMinLeft: number = 0;
-        while(topLeftPane != undefined) {
-            let assignedValue: number;
-            //assignedValue = topLeftPane.isMoving ? topLeftPane.getWidth() : topLeftPane.minWidth;
-            assignedValue = topLeftPane.minWidth;
-            sumMinLeft += assignedValue;
-            topLeftPane = topLeftPane.leftPane;
-        }
-        return sumMinLeft;
-    }
-
-    getMaxLeft(): number {
-        let topRightPane: Pane = this;
-        let sumMaxLeft: number = 0;//topRightPane.minWidth;
-        while(topRightPane.rightPane != undefined) {
-            let assignedValue: number;
-            //assignedValue = topRightPane.isMoving ? topRightPane.getWidth() : topRightPane.minWidth;
-            assignedValue = topRightPane.minWidth;
-            sumMaxLeft += assignedValue;
-            topRightPane = topRightPane.rightPane;
-        }
-        return topRightPane.rightAnchor() - sumMaxLeft - topRightPane.minWidth;
     }
 
     computeMaxLeft(): void {
@@ -157,7 +147,6 @@ export default class Pane extends PseudoElement {
             width = this.minWidth;
         }
         super.setWidth(width);
-        //console.log(this.element.id + " " + this.rightAnchor());
     }
 
     adapt(): void {
@@ -172,21 +161,6 @@ export default class Pane extends PseudoElement {
         return this.isMoving;
     }
 
-    getActualMinWdith(): number {
-        return this.actualMinWidth;
-    }
-
-    setAcualMinWidth(): void {
-        if(this.isMoving) this.actualMinWidth = this.getWidth();
-        else this.actualMinWidth = this.minWidth;
-    }
-
-    /**
-     * Moves right side of the pane to the specific position
-     * @param position Right position of the pane
-     */
-
-
     setLeft(left: number): void {
         if(left >= this.maxLeft) {
             left = this.maxLeft;
@@ -198,32 +172,7 @@ export default class Pane extends PseudoElement {
         this.adaptAttachedItems(left);
     }
 
-    canMove(direction: boolean): boolean {
-        if(direction) {
-            let topRightPane: Pane = this;
-            if(topRightPane.getWidth() <= topRightPane.minWidth) {
-                while((topRightPane = topRightPane.rightPane) != undefined) {
-                    if(topRightPane.isMoving) return false;
-                    if(topRightPane.getWidth() > topRightPane.minWidth) return true;
-                }
-                return false;
-            }
-            return true;
-        } else {
-            let topLeftPane: Pane = this.leftPane;
-            if(topLeftPane.getWidth() <= topLeftPane.minWidth) {
-                if(topLeftPane.isMoving) return false;
-                while((topLeftPane = topLeftPane.leftPane) != undefined) {
-                    if(topLeftPane.isMoving && topLeftPane.getWidth() <= topLeftPane.minWidth) return false;
-                    if(topLeftPane.getWidth() > topLeftPane.minWidth) return true;
-                }
-                return false;
-            }
-            return true;
-        }
-    }
-
-    canMoveTest(direction: boolean, position: number): number {
+    evaluatePosition(direction: boolean, position: number): number {
         let pane: Pane = direction ? this : this.leftPane;
         if(pane.computeWidth(direction, position) <= pane.minWidth) {
             if(direction) {
@@ -245,17 +194,6 @@ export default class Pane extends PseudoElement {
             }
         }
         return position;
-
-        /*if(!direction) {
-            if(this.leftPane.computeWidth(direction, position) <= this.leftPane.minWidth) {
-                if(this.leftPane.isMoving) return this.leftPane.leftAnchor() + this.leftPane.minWidth;
-            }
-        } else {
-            if(this.computeWidth(direction ,position) <= this.minWidth) {
-                if(this.rightPane.isMoving) return this.rightAnchor() - this.minWidth;
-            }
-        }
-        return position;*/
     }
 
     computeWidth(direction: boolean, position: number): number {
@@ -265,8 +203,7 @@ export default class Pane extends PseudoElement {
 
     move(position: number): void {
         let direction: boolean = position > this.getLeft() ? true : false;
-        //if(!this.canMove(direction)) return;
-        position = this.canMoveTest(direction, position);
+        position = this.evaluatePosition(direction, position);
 
         this.setLeft(position);
         this.adapt();
@@ -274,17 +211,17 @@ export default class Pane extends PseudoElement {
         if(direction) {
             if(this.getWidth() <= this.minWidth) {
                 if(this.rightPane != undefined) {
-                    this.rightPane.moveRight(position + this.getWidth());    
+                    this.rightPane.moveMate(direction, position + this.getWidth());    
                 }
             }
         } else {
             if(this.leftPane.getWidth() <= this.leftPane.minWidth) {
-                this.leftPane.moveLeft(position - this.leftPane.getWidth());
+                this.leftPane.moveMate(direction, position - this.leftPane.getWidth());
             }
         }
     }
 
-    moveMate(direction: number, position: number): void {
+    moveMate(direction: boolean, position: number): void {
         this.setLeft(position);
         this.adapt();
         if(this.getWidth() <= this.minWidth) {
@@ -336,7 +273,7 @@ export default class Pane extends PseudoElement {
     initPosition(): void {
         this.initLeft = this.getLeft();
         this.initWidth = this.getWidth();
-        this.initRight = this.rightPane.getLeft();
+        //this.initRight = this.rightPane.getLeft();
     }
 
     /**

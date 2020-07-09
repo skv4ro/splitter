@@ -32,9 +32,9 @@ export class Splitter {
             pane.rightPane = this.panes[i + 1];
         }
 
-        this.panes[1].leftItems.push(this.panes[0]);
+        /*this.panes[1].leftItems.push(this.panes[0]);
         this.panes[2].leftItems.push(this.panes[1]);
-        this.panes[3].leftItems.push(this.panes[2]);
+        this.panes[3].leftItems.push(this.panes[2]);*/
 
         /*this.panes[0].minLeft = 0;
         this.panes[1].minLeft = this.panes[0].minWidth;
@@ -104,7 +104,7 @@ export class Splitter {
         }
 
         for(let mover of this.movers) {
-            mover.setLeft(mover.rightMate.getLeft() - mover.getWidth() / 2);
+            mover.setLeft(mover.pane.getLeft() - mover.getWidth() / 2);
             mover.setTop(yValue - mover.getHeight() / 2);
         }
     }
