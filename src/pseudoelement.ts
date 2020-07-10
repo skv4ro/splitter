@@ -1,7 +1,5 @@
 export default abstract class PseudoElement {
     private left: number;
-    private top: number;
-    private height: number;
     private width: number;
     element: HTMLElement;
 
@@ -10,43 +8,40 @@ export default abstract class PseudoElement {
         this.element.style.position = 'absolute';
     }
 
-    setTop(top: number): void {
-        this.top = top;
-        this.element.style.top = top + "px";
-    }
-
-    getTop(): number {
-        return this.top;
-    }
-
+    /**
+     * Returns left position of PseudoElement.
+     */
     getLeft(): number {
         return this.left;
     }
 
+    /**
+     * Sets left position of PseudoElement and its element.
+     */
     setLeft(left: number) {
         this.left = left;
         this.element.style.left = left + 'px';
     }
 
+    /**
+     * Returns right position of PseudoElement.
+     */
     getRight(): number {
         return this.getLeft() + this.getWidth();
     }
 
+    /**
+     * Returns width of PseudoElement.
+     */
     getWidth(): number {
         return this.width;
     }
 
+    /**
+     * Sets width of PseudoElement and its element.
+     */
     setWidth(width: number) {
         this.width = width;
         this.element.style.width = width + 'px';
-    }
-
-    getHeight(): number {
-        return this.height;
-    }
-
-    setHeight(height: number) {
-        this.height = height;
-        this.element.style.height = height + 'px';
     }
 }

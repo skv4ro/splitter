@@ -13,7 +13,6 @@ export default class Pane extends PseudoElement {
     leftAnchor: Function = function(): number {return this.leftPane.getRight()}.bind(this);
     rightAnchor: Function = function(): number {return this.rightPane.getLeft()}.bind(this);
     
-
     constructor() {
         super();
         this.element.style.zIndex = '0';
@@ -21,6 +20,35 @@ export default class Pane extends PseudoElement {
         this.element.setAttribute('class', 'splitter-pane');
     }
 
+    /**
+     * Sets width. If width is lower than limit sets the limit.
+     * @param width width do assign
+     */
+    setWidth(width: number) {
+        if(width <= this.minWidth) {
+            width = this.minWidth;
+        }
+        super.setWidth(width);
+    }
+
+    /**
+     * Sets left. If left is lower or greated than limit sets the limit.
+     * @param left left to assign
+     */
+    setLeft(left: number): void {
+        if(left >= this.maxLeft) {
+            left = this.maxLeft;
+        }
+        if(left <= this.minLeft) {
+            left = this.minLeft;
+        }
+        super.setLeft(left);
+        this.adaptAttachedItems(left);
+    }
+
+    /**
+     * Swap element of this pane with its left mate pane.
+     */
     swap(): void {
         console.log(this);
         let leftWidth = this.leftPane.getWidth();
@@ -42,7 +70,7 @@ export default class Pane extends PseudoElement {
     }
 
     /**
-     * Attach item to this pane right's side
+     * Attach item to this pane left's side.
      * @param item New attached item
      */
     attachItem(item: AttachedItem): void {
@@ -50,7 +78,7 @@ export default class Pane extends PseudoElement {
     }
 
     /**
-     * Sets left position of attached element to the pane considering item leftOffset
+     * Sets left position of attached element to the pane considering item offset.
      * @param position Left position of attached element
      */
     private adaptAttachedItems(position: number): void {
@@ -59,68 +87,69 @@ export default class Pane extends PseudoElement {
         });
     }
 
-    computeMaxLeft(): void {
+    /**
+     * Compute maximul left of a pane.
+     */
+    private computeMaxLeft(): void {
         let topRightPane: Pane = this;
-        let sumMaxLeft: number = 0;//topRightPane.minWidth;
+        let sumMaxLeft: number = 0;
         while(topRightPane.rightPane != undefined) {
-            let assignedValue: number;
-            assignedValue = topRightPane.minWidth;
-            sumMaxLeft += assignedValue;
+            sumMaxLeft += topRightPane.minWidth;
             topRightPane = topRightPane.rightPane;
         }
         this.maxLeft =  topRightPane.rightAnchor() - sumMaxLeft - topRightPane.minWidth;
     }
 
-    computeMinLeft(): void {
+    /**
+     * Compute minimal left of a pane.
+     */
+    private computeMinLeft(): void {
         let topLeftPane: Pane = this.leftPane;
         let sumMinLeft: number = 0;
         while(topLeftPane != undefined) {
-            let assignedValue: number;
-            //assignedValue = topLeftPane.isMoving ? topLeftPane.getWidth() : topLeftPane.minWidth;
-            assignedValue = topLeftPane.minWidth;
-            sumMinLeft += assignedValue;
+            sumMinLeft += topLeftPane.minWidth;
             topLeftPane = topLeftPane.leftPane;
         }
         this.minLeft = sumMinLeft;
     }
 
+    /**
+     * Update maximal a minimal left position of pane.
+     */
     updateLimits(): void {
         this.computeMinLeft();
         this.computeMaxLeft();
     }
 
-    setWidth(width: number) {
-        if(width <= this.minWidth) {
-            width = this.minWidth;
-        }
-        super.setWidth(width);
-    }
-
+    /**
+     * Updates width of a pane.
+     */
     adapt(): void {
         this.setWidth(this.rightAnchor() - this.getLeft());
     }
 
+    /**
+     * Sets status that tells if a pane is being moved by someone or something.
+     * @param isMoving if pane is being moved
+     */
     setIsMoving(isMoving: boolean): void {
         this.isMoving = isMoving;
         this.initLeft = this.getLeft();
     }
 
+    /**
+     * Gets status if pane is being moved.
+     */
     getIsMoving(): boolean {
         return this.isMoving;
     }
 
-    setLeft(left: number): void {
-        if(left >= this.maxLeft) {
-            left = this.maxLeft;
-        }
-        if(left <= this.minLeft) {
-            left = this.minLeft;
-        }
-        super.setLeft(left);
-        this.adaptAttachedItems(left);
-    }
-
-    evaluatePosition(direction: boolean, position: number): number {
+    /**
+     * Evaluates if a pane can be moved to new position. If not, limit position is returned.
+     * @param direction true if right, false if left
+     * @param position new position of a pane
+     */
+    private evaluatePosition(direction: boolean, position: number): number {
         let pane: Pane = direction ? this : this.leftPane;
         if(pane.computeWidth(direction, position) <= pane.minWidth) {
             if(direction) {
@@ -144,6 +173,11 @@ export default class Pane extends PseudoElement {
         return position;
     }
 
+    /**
+     * Compute width which will pane has if it change position
+     * @param direction true if right, false if left
+     * @param position new position of a pane
+     */
     computeWidth(direction: boolean, position: number): number {
         if(direction) return this.rightAnchor() - position;
         else return position - this.leftAnchor();
@@ -169,7 +203,12 @@ export default class Pane extends PseudoElement {
         }
     }
 
-    moveMate(direction: boolean, position: number): void {
+    /**
+     * Moves left or right pane to its new position.
+     * @param direction right if true, left if false
+     * @param position new position to set
+     */
+    private moveMate(direction: boolean, position: number): void {
         this.setLeft(position);
         this.adapt();
         if(this.getWidth() <= this.minWidth) {
@@ -195,7 +234,7 @@ export default class Pane extends PseudoElement {
     }
 
     /**
-     * Return initial left position
+     * Return initial left position assigned by isMoving() method.
      */
     getInitLeft(): number {
         return this.initLeft;

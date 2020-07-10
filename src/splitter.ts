@@ -2,83 +2,109 @@ import Mover from "./mover";
 import * as _ from "lodash";
 import Pane from "./pane";
 import {defConfig} from "./config";
+import * as Hammer from "hammerjs";
 
 export class Splitter {
     readonly panes: Pane[] = [];
     readonly movers: Mover[] = [];
-    private readonly parent: HTMLElement;
+    private readonly root: HTMLElement;
     private readonly config: any;
 
     constructor(parent: HTMLElement, config: any) {
-        this.parent = parent;
+        this.root = parent;
         this.config = _.merge(defConfig, config);
-        this.build();
+        this.build(this.config.numOfPanes);
     }
 
-    private build(): void {
-        let numOfPanes = this.config.numOfPanes;
-
-        let i: number;
-        for(i = 0; i < numOfPanes; i++) {
-            const pane: Pane = new Pane();
-            pane.element.id = 'splitter-pane-' + (i + 1).toString();
+    /**
+     * Creates Pane objects, append them to this.panes[] and append pane's element to DOM.
+     * @param numOfPanes number of panes to create
+     */
+    private createPanes(numOfPanes: number): void {
+        for(let i: number = 0; i < numOfPanes; i++) {
+            let pane: Pane = new Pane();
             this.panes.push(pane);
-            this.parent.appendChild(pane.element);
+            this.root.appendChild(pane.element);
         }
+    }
 
-        for(i = 0; i < numOfPanes; i++) {
+    /**
+     * Creates Mover objects, append them to this.movers[] and append mover's element to DOM.
+     */
+    private createMovers(): void {
+        for(let i: number = 1; i < this.panes.length; i++) {
+            let pane: Pane = this.panes[i];
+            let mover: Mover = new Mover(pane);
+            pane.attachItem(mover);
+            this.movers.push(mover);
+            this.root.appendChild(mover.element);
+
+            mover.offset = -25;
+            mover.element.addEventListener('pointerdown', () => this.smallMover(mover));
+            document.addEventListener('pointerup', () => this.largeMover(mover));
+            mover.element.id = 'splitter-mover-' + i.toString() + '-' + (i + 1).toString();
+            const hammertime = new Hammer(mover.element);
+            hammertime.on("doubletap", () => mover.pane.swap());
+            mover.element.setAttribute('class', 'splitter-mover');
+        }
+    }
+
+    /**
+     * Assign left and right mate Pane to each pane of a splitter.
+     */
+    private assignPanesMates(): void {
+        for(let i: number = 0; i < this.panes.length; i++) {
             let pane: Pane = this.panes[i]; 
             pane.leftPane = this.panes[i - 1];
             pane.rightPane = this.panes[i + 1];
         }
+    }
 
-
-        this.panes[0].leftAnchor = function(): number {return 0}
-        this.panes[this.panes.length - 1].rightAnchor = function(): number {return this.parent.clientWidth}.bind(this);
-
-        for(i = 0; i < numOfPanes - 1; i++) {
-            const mover: Mover = new Mover(this.panes[i + 1]);
-            mover.element.id = 'splitter-mover-' + i.toString() + '-' + (i + 1).toString();
-            this.movers.push(mover);
-            this.parent.appendChild(mover.element);
-            mover.setParent(this.parent);
+    /**
+     * Computes min and max left for each pane of a splitter.
+     */
+    private computeLimits(): void {
+        for(let i: number = 0; i < this.panes.length; i++) {
+            let pane: Pane = this.panes[i]; 
+            pane.updateLimits();
         }
+    }
 
+    /**
+     * Assignes anchor for top left and top right pane.
+     */
+    private assignTopPanesAnchor(): void {
+        this.panes[0].leftAnchor = function(): number {return 0}
+        this.panes[this.panes.length - 1].rightAnchor = function(): number {return this.root.clientWidth}.bind(this);
+    }
+
+    /**
+     * Builds splitter.
+     * @param numOfPanes number of panes of a splitter.
+     */
+    private build(numOfPanes: number): void {
+        this.createPanes(numOfPanes);
+        this.assignPanesMates();
+        this.assignTopPanesAnchor();
+        this.computeLimits();
+        this.createMovers();
         this.initStyle();
     }
 
+    /**
+     * Initial style of DOM elements of a splitter.
+     */
     private initStyle(): void {
-        const xValue: number = this.parent.offsetWidth / this.panes.length;
-        const yValue: number = this.parent.offsetHeight / 2;
+        const xValue: number = this.root.offsetWidth / this.panes.length;
+        const yValue: number = this.root.offsetHeight / 2;
         let xOffset: number = 0;
 
-        let i: number = 0;
-        const len = this.panes.length;
-        for(i; i < len; i++) {
+        for(let i: number = 0; i < this.panes.length; i++) {
             let pane = this.panes[i];
-            let leftPane = this.panes[i - 1];
             pane.element.style.height = this.config.paneHeight;
-
-            /*if(i == 0) {
-                pane.setLeft(0);
-                pane.setWidth(0);
-            } else if(i == len - 1) {
-                pane.setWidth(0);
-                pane.setLeft(this.parent.clientWidth - pane.getWidth());
-            } else if (i == len - 2) {
-                pane.setLeft(leftPane.getLeft() + leftPane.getWidth());
-                pane.setWidth(this.parent.offsetWidth - leftPane.getLeft() - leftPane.getWidth() - this.panes[len - 1].getWidth() - (this.panes[len - 1].element.offsetWidth - this.panes[len - 1].element.clientWidth));
-            } else {
-                pane.setLeft(leftPane.getLeft() + leftPane.getWidth());
-                pane.setWidth(xValue);
-            }*/
-
-            if(i === len - 1) {
-                pane.setWidth(this.parent.offsetWidth - this.panes[i - 1].getLeft() - this.panes[i - 1].getWidth());
+            if(i === this.panes.length - 1) {
+                pane.setWidth(this.root.offsetWidth - this.panes[i - 1].getLeft() - this.panes[i - 1].getWidth());
                 pane.setLeft(xOffset);
-            } else if(i === 0) {
-                pane.setWidth(xValue);
-                pane.setLeft(0);
             } else {
                 pane.setWidth(xValue);
                 pane.setLeft(xOffset);                
@@ -102,13 +128,22 @@ export class Splitter {
             fullPanesWidth += pane.getWidth();
         }
         const panesRation: number[] = [];
-        //const xResizeRation: number = this.parent.offsetWidth / fullPanesWidth;
         for(let i = 0; i < this.panes.length; i++) {
             const pane = this.panes[i];
-            panesRation.push(panesWidths[i] / this.parent.offsetWidth);
+            panesRation.push(panesWidths[i] / this.root.offsetWidth);
             pane.setLeft(panesLefts[i] * panesRation[i]);
             pane.setWidth(panesWidths[i] * panesRation[i]);
         }
 
+    }
+    
+    private smallMover(mover: Mover): void {
+        const scaleFactor = .2;
+        const scale = 1 - scaleFactor;
+        mover.element.style.transform = 'scale(' + scale + ',' + scale +')';
+    }
+
+    private largeMover(mover: Mover): void {
+        mover.element.style.transform = 'scale(1, 1)';
     }
 }
