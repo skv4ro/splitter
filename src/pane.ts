@@ -2,43 +2,23 @@ import PseudoElement from "./pseudoelement";
 import AttachedItem from "./attacheditem";
 
 export default class Pane extends PseudoElement {    
-    minWidth: number = 50;
     private initLeft: number;
-    private initWidth: number;
-    private initRight: number; 
-    readonly attachedItems: AttachedItem[] = []; //items attached to left side of a pane
-    readonly moveCallbacks: Function[] = [];
-    leftPane: Pane; //relative left mate pane
-    rightPane: Pane; //relative right mate pane
-    isMoving: boolean; //true if pane is being moving by mover
-    leftAnchor: Function = function(): number {
-        //if(this.leftPane == undefined) return;
-        return this.leftPane.getRight();
-    }.bind(this);
-    rightAnchor: Function = function(): number {
-        //if(this.rightPane == undefined) return;
-        return this.rightPane.getLeft();
-    }.bind(this);
-    //leftItems: Pane[] = [];
-    //actualMinWidth: number = this.minWidth;
-    maxLeft: number;
-    minLeft: number;
+    private maxLeft: number;
+    private minLeft: number;
+    private isMoving: boolean; 
+    readonly attachedItems: AttachedItem[] = []; 
+    minWidth: number = 50;
+    leftPane: Pane; 
+    rightPane: Pane; 
+    leftAnchor: Function = function(): number {return this.leftPane.getRight()}.bind(this);
+    rightAnchor: Function = function(): number {return this.rightPane.getLeft()}.bind(this);
+    
 
     constructor() {
         super();
-        this.setZIndex(0);
-        //this.element.style.height = '100%';
+        this.element.style.zIndex = '0';
         this.element.style.left = '0';
         this.element.setAttribute('class', 'splitter-pane');
-    }
-
-    /**
-     * Runs move callbacks
-     */
-    runMoveCallbacks(): void {
-        this.moveCallbacks.forEach(callback => {
-            callback();
-        })
     }
 
     swap(): void {
@@ -67,39 +47,6 @@ export default class Pane extends PseudoElement {
      */
     attachItem(item: AttachedItem): void {
         this.attachedItems.push(item);
-    }
-
-    /**
-     * Adapt right pane positions
-     */
-    adaptRight(): void {
-        if(this.rightPane == undefined) return;
-        let offset = this.leftPane.getRight();
-        this.setLeft(offset);
-        let width = this.rightPane.getLeft() - this.getLeft();
-        if(width <= this.minWidth) {
-            this.setWidth(this.minWidth);
-            this.rightPane.adaptRight();
-        } else {
-            this.setWidth(width);  
-        } 
-    }
-
-    /**
-     * Adapt left pane positions
-     */
-    adaptLeft(): void {
-        if(this.leftPane == undefined) return;
-        let offset: number = this.leftPane.getRight();
-        let width: number = this.rightPane.getLeft() - this.getLeft();
-        if(width <= this.minWidth) {
-            this.setLeft(this.rightPane.getLeft() - this.minWidth);
-            this.setWidth(this.minWidth);
-            this.leftPane.adaptLeft();
-        } else {
-            this.setLeft(offset);
-            this.setWidth(width);
-        } 
     }
 
     /**
@@ -155,6 +102,7 @@ export default class Pane extends PseudoElement {
 
     setIsMoving(isMoving: boolean): void {
         this.isMoving = isMoving;
+        this.initLeft = this.getLeft();
     }
 
     getIsMoving(): boolean {
@@ -237,27 +185,6 @@ export default class Pane extends PseudoElement {
         }
     }
 
-    moveRight(position: number) {
-        this.setLeft(position);
-        this.adapt();
-        if(this.getWidth() <= this.minWidth) {
-            if(this.rightPane != undefined) {
-                this.rightPane.moveRight(position + this.getWidth());
-            }
-        }
-    }
-
-    moveLeft(position: number): void {
-        this.setLeft(position);
-        this.adapt();
-        if(this.getWidth() <= this.minWidth) {
-            if(this.leftPane != undefined) {
-                this.leftPane.adapt();
-                this.leftPane.moveLeft(position - this.leftPane.getWidth());
-            }
-        }
-    }
-
     /**
      * Moves the pane by increment value
      * @param increment Increment to move the pane by
@@ -268,33 +195,9 @@ export default class Pane extends PseudoElement {
     }
 
     /**
-     * Sets initial positions of the pane before its moving
-     */
-    initPosition(): void {
-        this.initLeft = this.getLeft();
-        this.initWidth = this.getWidth();
-        //this.initRight = this.rightPane.getLeft();
-    }
-
-    /**
      * Return initial left position
      */
     getInitLeft(): number {
         return this.initLeft;
-    }
-
-    /**
-     * Return initial width
-     */
-    getInitWidth(): number {
-        return this.initWidth;
-    }
-
-
-    /**
-     * Return initial right position
-     */
-    getInitRight(): number {
-        return this.initRight;
     }
 }

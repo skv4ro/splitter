@@ -1,17 +1,25 @@
 export default abstract class PseudoElement {
-    private zIndex: number;
     private left: number;
+    private top: number;
+    private height: number;
     private width: number;
     element: HTMLElement;
-    //offsetLeft: number = 0;
 
     constructor() {
         this.element = document.createElement('div');
         this.element.style.position = 'absolute';
     }
 
+    setTop(top: number): void {
+        this.top = top;
+        this.element.style.top = top + "px";
+    }
+
+    getTop(): number {
+        return this.top;
+    }
+
     getLeft(): number {
-        //return parseInt(this.element.style.left);
         return this.left;
     }
 
@@ -25,7 +33,6 @@ export default abstract class PseudoElement {
     }
 
     getWidth(): number {
-        //return this.element.offsetWidth;
         return this.width;
     }
 
@@ -34,8 +41,12 @@ export default abstract class PseudoElement {
         this.element.style.width = width + 'px';
     }
 
-    setZIndex(zIndex: number) {
-        this.zIndex = zIndex;
-        this.element.style.zIndex = this.zIndex.toString();
+    getHeight(): number {
+        return this.height;
+    }
+
+    setHeight(height: number) {
+        this.height = height;
+        this.element.style.height = height + 'px';
     }
 }

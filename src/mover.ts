@@ -3,7 +3,6 @@ import Pane from "./pane";
 import * as Hammer from "hammerjs";
 
 export default class Mover extends AttachedItem {
-    //readonly leftMate: Pane;
     readonly pane: Pane;
     private initX: number = 0;
     private initY: number = 0;
@@ -11,14 +10,10 @@ export default class Mover extends AttachedItem {
     private scaleFactor: number = .2;
     private boundMouseMoveHandle: EventListener;
     private pointerID: number;
-    parent: HTMLElement;
-    //topLeftMate: Pane = this.leftMate;
-    topRightMate: Pane = this.pane;
+    root: HTMLElement;
 
-
-    constructor(leftMate: Pane, rightMate: Pane) {
+    constructor(rightMate: Pane) {
         super();
-        //this.leftMate = leftMate;
         this.pane = rightMate;
         this.element.setAttribute('class', 'splitter-mover');
 
@@ -32,7 +27,7 @@ export default class Mover extends AttachedItem {
     }
     
     setParent(parent: HTMLElement): void {
-        this.parent = parent;
+        this.root = parent;
     }
 
     getHeight(): number {
@@ -62,14 +57,12 @@ export default class Mover extends AttachedItem {
         this.initY = event.clientY;
         this.initTop = this.getTop();
         document.addEventListener('pointermove', this.boundMouseMoveHandle = this.eventMoveHandler.bind(this));
-        this.pane.initPosition();
         this.pane.setIsMoving(true);
     }
 
     private eventMoveHandler(event: PointerEvent): void {
         if(event.pointerId === this.pointerID) {
             event.preventDefault();
-            const difX: number = Math.round(event.clientX) - this.initX;
             const difY: number = event.clientY - this.initY;
 
             this.setTop(this.initTop + difY);

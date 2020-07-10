@@ -7,7 +7,7 @@ export class Splitter {
     readonly panes: Pane[] = [];
     readonly movers: Mover[] = [];
     private readonly parent: HTMLElement;
-    private readonly config;
+    private readonly config: any;
 
     constructor(parent: HTMLElement, config: any) {
         this.parent = parent;
@@ -32,29 +32,12 @@ export class Splitter {
             pane.rightPane = this.panes[i + 1];
         }
 
-        /*this.panes[1].leftItems.push(this.panes[0]);
-        this.panes[2].leftItems.push(this.panes[1]);
-        this.panes[3].leftItems.push(this.panes[2]);*/
 
-        /*this.panes[0].minLeft = 0;
-        this.panes[1].minLeft = this.panes[0].minWidth;
-        this.panes[2].minLeft = this.panes[0].minWidth + this.panes[1].minWidth;
-        this.panes[3].minLeft = this.panes[0].minWidth + this.panes[1].minWidth + this.panes[2].minWidth;
-        this.panes[0].maxLeft = this.parent.clientWidth - this.panes[3].minWidth - this.panes[2].minWidth - this.panes[1].minWidth - this.panes[0].minWidth;
-        this.panes[1].maxLeft = this.parent.clientWidth - this.panes[3].minWidth - this.panes[2].minWidth - this.panes[1].minWidth;
-        this.panes[2].maxLeft = this.parent.clientWidth - this.panes[3].minWidth - this.panes[2].minWidth;
-        this.panes[3].maxLeft = this.parent.clientWidth - this.panes[3].minWidth;*/
-
-
-        this.panes[0].leftAnchor = function(): number {
-            return 0;
-        }
-        this.panes[this.panes.length - 1].rightAnchor = function(): number {
-            return this.parent.clientWidth;
-        }.bind(this);
+        this.panes[0].leftAnchor = function(): number {return 0}
+        this.panes[this.panes.length - 1].rightAnchor = function(): number {return this.parent.clientWidth}.bind(this);
 
         for(i = 0; i < numOfPanes - 1; i++) {
-            const mover: Mover = new Mover(this.panes[i], this.panes[i + 1]);
+            const mover: Mover = new Mover(this.panes[i + 1]);
             mover.element.id = 'splitter-mover-' + i.toString() + '-' + (i + 1).toString();
             this.movers.push(mover);
             this.parent.appendChild(mover.element);
