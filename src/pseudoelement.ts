@@ -1,11 +1,21 @@
 export default abstract class PseudoElement {
-    private left: number;
-    private width: number;
+    private left: number = 0;
+    private width: number = 0;
     element: HTMLElement;
 
     constructor() {
         this.element = document.createElement('div');
         this.element.style.position = 'absolute';
+        this.element.style.left = "0px";
+        this.element.style.top = "0px";
+    }
+
+    
+    /**
+     * Returnt offsetHeight of mover element.
+     */
+    getHeight(): number {
+        return this.element.offsetHeight;
     }
 
     /**

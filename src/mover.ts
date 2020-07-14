@@ -8,19 +8,13 @@ export default class Mover extends AttachedItem {
     private initTop: number = 0;
     private pointerID: number;
     private boundMouseMoveHandle: EventListener;
+    moveY: boolean = true;
 
     constructor(rightMate: Pane) {
         super();
         this.pane = rightMate;
         this.element.addEventListener('pointerdown', event => this.eventStartHandler(event));
         document.addEventListener('pointerup', event => this.eventEndHandler(event));
-    }
-
-    /**
-     * Returnt offsetHeight of mover element.
-     */
-    getHeight(): number {
-        return this.element.offsetHeight;
     }
 
     /**
@@ -42,6 +36,7 @@ export default class Mover extends AttachedItem {
             top  = 0 ;
         }
         this.element.style.top = top + 'px';
+
     }
 
 
@@ -67,7 +62,7 @@ export default class Mover extends AttachedItem {
     private eventMoveHandler(event: PointerEvent): void {
         if(event.pointerId === this.pointerID) {
             event.preventDefault();
-            this.updateTop(event);
+            if(this.moveY) this.updateTop(event);
             this.movePane(event);
         }
     }
@@ -101,5 +96,17 @@ export default class Mover extends AttachedItem {
             document.removeEventListener('pointermove', this.boundMouseMoveHandle);
             this.pane.setIsMoving(false);
         }
+    }
+
+    /**
+     * Assign default style for mover's element.
+     */
+    styleDefault(): void {
+        let style: CSSStyleDeclaration = this.element.style;
+        style.width = "50px";
+        style.height = "50px";
+        style.borderRadius = "25px";
+        style.backgroundColor = "black";
+        style.opacity = ".5";
     }
 }

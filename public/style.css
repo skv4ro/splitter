@@ -1,15 +1,12 @@
-.splitter-mover {
-    width: 50px;
+.mover {
     height: 50px;
-    border-radius: 25px;
-    background-color: black;
-    transition: transform .25s;
-    opacity: .5;
-    /*margin-left: -25px;*/
+    width: 50px;
+    background: yellow;
+    transition: transform .2s;
 }
-/*.splitter-pane {
-    border: 5px solid black;
-}*/
+.pane {
+    height: 100%;
+}
 html {
     touch-action: none;
 }
@@ -17,4 +14,22 @@ html {
     margin: 10px;
     height: calc(100% - 20px);
     border: 1px solid white;
+}
+#pane0 {
+    background: #567;
+}
+#pane1 {
+    background: #675;
+}
+#pane2 {
+    background: #756;
+}
+#pane3 {
+    background: #576;
+}
+#pane4 {
+    background: #657;
+}
+#pane5 {
+    background: #765;
 }

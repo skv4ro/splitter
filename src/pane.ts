@@ -10,14 +10,28 @@ export default class Pane extends PseudoElement {
     minWidth: number = 50;
     leftPane: Pane; 
     rightPane: Pane; 
-    leftAnchor: Function = function(): number {return this.leftPane.getRight()}.bind(this);
-    rightAnchor: Function = function(): number {return this.rightPane.getLeft()}.bind(this);
-    
-    constructor() {
-        super();
-        this.element.style.zIndex = '0';
-        this.element.style.left = '0';
-        this.element.setAttribute('class', 'splitter-pane');
+    leftAnchor: Function = this.defaultLeftAnchor;
+    rightAnchor: Function = this.defaultRightAnchor;
+
+    private defaultLeftAnchor(): number {
+        return this.leftPane.getRight();
+    }
+
+    private defaultRightAnchor(): number {
+        return this.rightPane.getLeft();
+    }
+
+    updateAnchors(): void {
+        if(this.leftPane != undefined) this.leftAnchor = this.defaultLeftAnchor;
+        if(this.rightPane != undefined) this.rightAnchor = this.defaultRightAnchor;
+    }
+
+    /**
+     * Assign default style for pane's element.
+     */
+    styleDefault(): void {
+        let style: CSSStyleDeclaration = this.element.style;
+        style.height = "100%";
     }
 
     /**
@@ -50,23 +64,26 @@ export default class Pane extends PseudoElement {
      * Swap element of this pane with its left mate pane.
      */
     swap(): void {
-        console.log(this);
-        let leftWidth = this.leftPane.getWidth();
-        let leftLeft = this.leftPane.getLeft();
-        let rightWidth = this.getWidth();
-        let rightLeft = this.getLeft();
-        let leftElement = this.leftPane.element;
-        let rightElement = this.element;
+        this.swapPanes(this.leftPane);
+    }
+
+    swapPanes(pane: Pane): void {
+        let width2 = pane.getWidth();
+        let left2 = pane.getLeft();
+        let width = this.getWidth();
+        let left = this.getLeft();
+        let element2 = pane.element;
+        let element = this.element;
         let temp: HTMLElement;
 
-        temp = leftElement;
-        this.leftPane.element = rightElement;
+        temp = element2;
+        pane.element = element;
         this.element = temp;
 
-        this.leftPane.setWidth(leftWidth);
-        this.leftPane.setLeft(leftLeft);
-        this.setWidth(rightWidth);
-        this.setLeft(rightLeft);
+        pane.setWidth(width2);
+        pane.setLeft(left2);
+        this.setWidth(width);
+        this.setLeft(left);
     }
 
     /**
@@ -85,6 +102,12 @@ export default class Pane extends PseudoElement {
         this.attachedItems.forEach(item => {
             item.setLeft(position + item.offset);
         });
+    }
+
+    removeAttachedItemsFromDom() {
+        for(let item of this.attachedItems) {
+            item.element.remove();
+        }
     }
 
     /**
@@ -119,6 +142,7 @@ export default class Pane extends PseudoElement {
     updateLimits(): void {
         this.computeMinLeft();
         this.computeMaxLeft();
+        this.updateAnchors();
     }
 
     /**
@@ -153,6 +177,7 @@ export default class Pane extends PseudoElement {
         let pane: Pane = direction ? this : this.leftPane;
         if(pane.computeWidth(direction, position) <= pane.minWidth) {
             if(direction) {
+                if(pane.rightPane == undefined) return position;
                 if(pane.rightPane.isMoving) return pane.rightAnchor() - pane.minWidth;
                 let sum: number = pane.minWidth;
                 while((pane = pane.rightPane) != undefined) {
