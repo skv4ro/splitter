@@ -8,10 +8,14 @@ export default class Splitter {
     readonly movers: Mover[] = [];
     readonly root: HTMLElement;
     readonly config: any;
+    private rootWidth: number;
 
     constructor(config: any) {
         this.root = config.root;
         this.config = _.merge(defConfig, config);
+        
+        this.setRootWidth();
+        if(this.config.numOfPanes > this.config.maxNumOfPanes) this.config.numOfPanes = this.config.maxNumOfPanes;
         this.build(this.config.numOfPanes);
         if(!this.config.delayInit) this.init();
         addEventListener("resize", () => this.update());
@@ -122,6 +126,10 @@ export default class Splitter {
         }
     }
 
+    private setRootWidth(): void {
+        this.rootWidth = this.root.clientWidth;
+    }
+
     getRootWidth(): number {
         return this.root.clientWidth;
     }
@@ -141,26 +149,31 @@ export default class Splitter {
     }
 
     addPane(): void {
+        if(this.panes.length + 1 > this.config.maxNumOfPanes) return;
         let oldLastPane: Pane = this.panes[this.panes.length - 1];
         let pane: Pane = this.createPane(this.panes.length);
         oldLastPane.rightPane = pane;
         pane.leftPane = oldLastPane;
         pane.rightAnchor = this.topRightAnchor.bind(this);
-        pane.move(this.getRootWidth() - pane.minWidth);
         this.createMover(pane, this.movers.length);
-        this.update();
+        pane.setLeft(this.getRootWidth());
+        this.updateLimitsOfAllPanes();
+        pane.move(pane.rightAnchor() - pane.minWidth);  
     }
 
     removePane(i: number): void {
         let moverIndex = i - 1;
         let pane: Pane = this.panes[i];
         let mover: Mover = this.movers[moverIndex];
+        let paneToAdapt: Pane;
         if(pane == undefined) return;
         if(pane.rightPane == undefined) {
+            paneToAdapt = pane.leftPane;
             let newTopRightPane: Pane = this.panes[i - 1];
             newTopRightPane.rightAnchor = this.topRightAnchor.bind(this);
             newTopRightPane.rightPane = undefined;
         } else if(pane.leftPane == undefined) {
+            paneToAdapt = pane.rightPane;
             let newTopLeftPane: Pane = this.panes[i + 1];
             newTopLeftPane.leftAnchor = this.topLeftAnchor;
             newTopLeftPane.leftPane = undefined;
@@ -171,29 +184,36 @@ export default class Splitter {
             let rightPane: Pane = this.panes[i + 1];
             leftPane.rightPane = rightPane;
             rightPane.leftPane = leftPane;
+            paneToAdapt = leftPane;
         }
         mover.element.remove();
         this.movers.splice(moverIndex, 1);
         pane.removeAttachedItemsFromDom();
         pane.element.remove();
         this.panes.splice(i, 1);
-        this.update();
+        this.updateLimitsOfAllPanes();
+        paneToAdapt.setLeft(paneToAdapt.leftAnchor());
+        paneToAdapt.adapt();
+    }
+
+    private updateLimitsOfAllPanes(): void {
+        for(let pane of this.panes) {
+            pane.updateLimits();
+        }
     }
 
     update(): void {
+        if(this.panes.length == 1) this.panes[0].setWidth(this.getRootWidth());
         let oldRootwidth: number = this.getRootWidth();
-        let newRootWidth: number = this.root.clientWidth;
-        let ratio: number = newRootWidth / oldRootwidth;
+        this.setRootWidth();
+        let newRootWidth: number = this.getRootWidth();
 
-        for(let i = 0; i < this.panes.length; i++) {
+        let ratio: number = newRootWidth / oldRootwidth
+
+        for(let i = 1; i < this.panes.length; i++) {
             let pane: Pane = this.panes[i];
-            pane.updateLimits();
-            if(i == 0) {
-                pane.setLeft(0);
-                if(this.panes.length == 1) pane.setWidth(this.getRootWidth());
-            } else {
-                pane.move(pane.getLeft() * ratio);
-            }
+            pane.updateLimits();                
+            pane.move(pane.getLeft() * ratio);
         }
     }
 }

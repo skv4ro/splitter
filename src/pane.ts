@@ -254,7 +254,7 @@ export default class Pane extends PseudoElement {
      * @param increment Increment to move the pane by
      */
     moveBy(increment: number): void {
-        let initalPosition: number = this.getRight();
+        let initalPosition: number = this.getLeft();
         this.move(initalPosition + increment);
     }
 

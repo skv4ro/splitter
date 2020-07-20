@@ -1,3 +1,6 @@
+/**
+ * Subor na otestovanie funkcnosti Splitter-u
+ */
 import Splitter from "./src/splitter";
 import * as Hammer from "hammerjs";
 import AttachedItem from "./src/attacheditem";
@@ -5,11 +8,10 @@ import AttachedItem from "./src/attacheditem";
 let root: HTMLElement = document.querySelector("#app");
 
 let splitterConfig = {
-    numOfPanes: 5,
+    numOfPanes: 4,
     root: root,
     delayInit: true,
-    offsetLeft: 100,
-    offsetRight: 100
+    maxNumOfPanes: 10,
 }
 
 class SplitLine extends AttachedItem {
@@ -30,7 +32,6 @@ class App {
         this.splitter = new Splitter(splitterConfig);
         this.styleMovers(this.splitter);
         this.addSplitLines(this.splitter);
-        //this.splitter.init();
         this.splitter.init();
     }
 
@@ -67,13 +68,22 @@ let app: App = new App();
 
 declare global {
     interface Window {
-      test: Function;
+      tadd: Function;
+      tremove: Function;
+      tinit: Function;
+      tswap: Function;
     }
   }
 
-window.test = function test(): void {
-    //app.splitter.addPane();
-    //app.splitter.removePane(1);
-    //app.splitter.init();
+window.tadd = function tadd(): void {
+    app.splitter.addPane();
+}
+window.tremove = function tremove(): void {
+    app.splitter.removePane(app.splitter.panes.length - 1);
+}
+window.tinit = function tinit(): void {
+    app.splitter.init();
+}
+window.tswap = function tswap(): void {
     app.splitter.panes[0].swapPanes(app.splitter.panes[3]);
 }

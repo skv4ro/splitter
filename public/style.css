@@ -11,8 +11,8 @@ html {
     touch-action: none;
 }
 #root {
-    margin: 10px;
-    height: calc(100% - 20px);
+    margin: 100px;
+    height: calc(100% - 200px);
     border: 1px solid white;
 }
 #pane0 {

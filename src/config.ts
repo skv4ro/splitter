@@ -1,6 +1,5 @@
 export const defConfig: any = {
     numOfPanes: 3,
-    paneHeight: "100%",
     delayInit: false,
     addCssClass: false,
     addId: true,
@@ -10,4 +9,5 @@ export const defConfig: any = {
     moverIdName: "mover",
     moverOffset: -25,
     moverMoverY: true,
+    maxNumOfPanes: 6,
 }

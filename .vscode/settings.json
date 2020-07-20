@@ -2,7 +2,7 @@
     "files.exclude": {
         "src/**/*.js": true,
         "src/**/*.js.map": true,
-        "app.js": false,
+        "app.js": true,
         "app.js.map": true
     }
 }
